@@ -1,8 +1,9 @@
 import mongoose from "mongoose"
 import User from "../models/User.js";
 import bcrypt from "bcryptjs"
+import { createError } from "../error.js";
 
-export const signup = async (req, res) => {
+export const signup = async (req, res, next) => {
 
     try {
         const salt = bcrypt.genSaltSync(10);
@@ -11,12 +12,17 @@ export const signup = async (req, res) => {
         await newUser.save();
         res.status(200).send("User have been successfully created!");
     } catch (err) {
-        throw err
+        next(err)
     }
 }
 
-export const signin = (req, res) => {
-
+export const signin = async (req, res, next) => {
+    try {
+        const user = await User.findOne({ name: req.body.name });
+        if (!user) return next(createError(404, "User not found!"));
+    } catch (err) {
+        next(err)
+    }
 }
 
 export const google = (req, res) => {

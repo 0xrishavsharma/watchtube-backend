@@ -22,6 +22,17 @@ app.use("/api/comments", commentRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/videos", videoRoutes)
 
+// Creating middleware for error handling in a express server
+app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = err.message || "Something went wrong, please try again!";
+    return res.status(status).json({
+        success: false,
+        status,
+        message
+    })
+})
+
 app.listen(8800, () => {
     connect();
     console.log("Server is listening at 8800");
