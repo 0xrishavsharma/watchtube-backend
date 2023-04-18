@@ -10,7 +10,7 @@ export const signup = async (req, res, next) => {
         const hash = bcrypt.hashSync(req.body.password, salt);
         const newUser = new User({ ...req.body, password: hash });
         await newUser.save();
-        res.status(200).send("User have been successfully created!");
+        res.status(200).send(`${newUser.name}'s account have been successfully created!`);
     } catch (err) {
         next(err)
     }
@@ -26,7 +26,7 @@ export const signin = async (req, res, next) => {
         if (!isCorrect) return next(createError(401, "Password is incorrect!"));
 
         // creating a jwt token after hashing the user id and we are going to send this token to the user after successful login
-        // The second argument is a secret key that we need to provide it can be anything
+        // The second argument is a secret key that we need to provide, it can be anything
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
 
         // separating password from the user object so that we don't send password in the response
