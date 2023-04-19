@@ -43,30 +43,46 @@ export const getUser = async (req, res, next) => {
 }
 export const subscribe = async (req, res, next) => {
     try {
-        // adding the requested channel to the subscribed channels array
-        await User.findById(req.user.id, {
-            $push: { subscribedUsers: req.params.id }
-        })
-        // adding user to the channel subscribers array
+        const channel = await User.findById(req.params.id);
+        const user = await User.findById(req.user.id);
+        if (channel === null) {
+            return res.status(400).send(`Channel with ${channel.name} name does not exist.`);
+        }
+        if (user.subscribedChannels.indexOf(channel._id) !== -1) {
+            return res.status(400).send(`The ${channel.name}'s channel has already been subscribed.`);
+        }
+        await User.findByIdAndUpdate(req.user.id, {
+            $push: { subscribedChannels: req.params.id },
+        });
         await User.findByIdAndUpdate(req.params.id, {
-            $inc: { subscribers: 1 }
-        })
-        res.status(200).send(`Successfully subscribed to the ${channel.name}'s channel.`)
+            $inc: { subscribers: 1 },
+        });
+        res.status(200).send(`Successfully subscribed to ${channel.name}'s channel.`);
     } catch (err) {
         next(err);
     }
-}
+};
 export const unsubscribe = async (req, res, next) => {
     try {
-        // adding the requested channel to the subscribed channels array
-        await User.findById(req.user.id, {
-            $pull: { subscribedUsers: req.params.id }
-        })
-        // adding user to the channel subscribers array
-        await User.findByIdAndUpdate(req.params.id, {
-            $inc: { subscribers: -1 }
-        })
-        res.status(200).send(`Successfully subscribed to the ${channel.name}'s channel.`)
+        const channel = await User.findById(req.params.id);
+        const user = await User.findById(req.user.id);
+        if (user.subscribedChannels.indexOf(channel._id) === -1) {
+            return res.status(400).send(`${channel.name}'s channel has already unsubscribed or doesn't exist in the subscribed channels list.`);
+        }
+        // get the current subscribers count
+        const currentSubscribers = channel.subscribers;
+        // check if the subscribers count is greater than 0 before decrementing it
+        if (currentSubscribers > 0) {
+            await User.findByIdAndUpdate(req.params.id, {
+                $inc: { subscribers: -1 },
+            });
+            await User.findByIdAndUpdate(req.user.id, {
+                $pull: { subscribedChannels: req.params.id },
+            });
+            res.status(200).send(`Successfully unsubscribed from ${channel.name}'s channel.`);
+        } else {
+            res.status(400).send(`The subscribers count for ${channel.name}'s channel is already 0.`);
+        }
     } catch (err) {
         next(err);
     }

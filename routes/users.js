@@ -11,18 +11,18 @@ router.put("/:id", verifyToken, update);
 router.delete("/:id", verifyToken, deleteUser);
 
 // get a user
-router.put("/find/:id", getUser);
+router.get("/find/:id", getUser);
 
 // subscribe a user
-router.put("/sub/:id", verifyToken, subscribe);
+router.put("/subscribe/:id", verifyToken, subscribe);
 
 // unsubscribe a user
-router.put("/unsub/:id", verifyToken, unsubscribe);
+router.put("/unsubscribe/:id", verifyToken, unsubscribe);
 
 // like a video
-router.put("/like/:id", verifyToken, like);
+router.patch("/like/:id", verifyToken, like);
 
 // dislike a video
-router.put("/dislike/:id", verifyToken, dislike);
+router.patch("/dislike/:id", verifyToken, dislike);
 
 export default router;  
