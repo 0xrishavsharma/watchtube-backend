@@ -76,7 +76,7 @@ export const updateViews = async (req, res, next) => {
 
 export const getRandomVideos = async (req, res, next) => {
     try {
-        const randomVideos = await Video.aggregate({ $sample: { size: 38 } }); //$sample function returns us a random sample of videos and here we have mentioned that we want 38 videos
+        const randomVideos = await Video.aggregate([{ $sample: { size: 1 } }]); //$sample function returns us a random sample of videos and here we have mentioned that we want 38 videos
         res.status(200).send(randomVideos)
     } catch (err) {
         next(err);
@@ -110,3 +110,73 @@ export const getSubscriptionVideos = async (req, res, next) => {
     }
 }
 
+export const getByTags = async (req, res, next) => {
+    try {
+        const tags = req.query.tags.split(","); // Here we are splitting the tags by comma and storing them in an array
+
+        const videos = await Video.find({ tags: { $in: tags } }).limit(20); // Here we are using $in operator to find videos that have tags that are in the tags array
+        res.status(200).send(videos)
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const getSearchedVideos = async (req, res, next) => {
+    const query = req.query.q;
+    try {
+        const searchedVideos = await Video.find({
+            videoTitle: { $regex: query, $options: "i" }
+        }).limit(40); // Here by setting sorting condition to views: 1 are saying that bring us the most viewed videos
+        res.status(200).send(searchedVideos);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const likeVideo = async (req, res, next) => {
+    const video = await Video.findById(req.params.videoId);
+    if (!video) return res.status(403).send("This video doesn't exist")
+    try {
+        // If the video is already liked we simply return and exit the function
+        if (video.likes.includes(req.user.id)) {
+            return res.status(200).json("The video is already liked!")
+        };
+        const updatedVideo = await Video.findByIdAndUpdate(req.params.videoId, {
+            $push: { //we can also use addToSet method to avoid liking the video more than once
+                likes: req.user.id
+            },
+            $pull: {
+                dislikes: req.user.id
+            }
+        },
+            { new: true }) //To return the update document
+        res.status(200).json(updatedVideo)
+    }
+    catch (err) {
+        next(createError(404, `Something went wrong. Please try again! ${err}`))
+    }
+}
+
+export const dislikeVideo = async (req, res, next) => {
+    const video = await Video.findById(req.params.videoId);
+    if (!video) return res.status(403).send("This video doesn't exist")
+    try {
+        // If the video is already disliked we simply return the video and exit the function
+        if (video.dislikes.includes(req.user.id)) {
+            return res.status(200).json("The video is already disliked!")
+        };
+        const updatedVideo = await Video.findByIdAndUpdate(req.params.videoId, {
+            $push: { //we can also use addToSet method to avoid disliking the video more than once
+                dislikes: req.user.id
+            },
+            $pull: {
+                likes: req.user.id
+            }
+        },
+            { new: true }) //To return the update document
+        res.status(200).json(updatedVideo)
+    }
+    catch (err) {
+        next(createError(404, `Something went wrong. Please try again! ${err}`))
+    }
+}
