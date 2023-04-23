@@ -76,7 +76,7 @@ export const updateViews = async (req, res, next) => {
 
 export const getRandomVideos = async (req, res, next) => {
     try {
-        const randomVideos = await Video.aggregate([{ $sample: { size: 1 } }]); //$sample function returns us a random sample of videos and here we have mentioned that we want 38 videos
+        const randomVideos = await Video.aggregate([{ $sample: { size: 30 } }]); //$sample function returns us a random sample of videos and here we have mentioned that we want 38 videos
         res.status(200).send(randomVideos)
     } catch (err) {
         next(err);
