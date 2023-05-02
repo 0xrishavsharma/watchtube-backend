@@ -1,5 +1,6 @@
 import { createError } from "../error.js";
 import User from "../models/User.js";
+import Video from "../models/Video.js";
 
 export const update = async (req, res, next) => {
     if (req.user.id === req.params.id) {
@@ -88,40 +89,27 @@ export const unsubscribe = async (req, res, next) => {
     }
 }
 export const like = async (req, res, next) => {
-    if (req.user.id === req.params.id) {
-        try {
-            const deletedUser = await User.findByIdAndDelete(req.params.id,
-                {
-                    $set: req.body
-                },
-                {
-                    new: true
-                }
-            )
-            res.status(200).send(`The user that was deleted is ${deletedUser}`)
-        } catch (err) {
-            next(err);
-        }
-    } else {
-        return next(createError(403, "Please check the added user Id. You can only delete your account!"))
+    try {
+        const userId = req.user.id;
+        const likedVideo = await Video.findByIdAndUpdate(req.params.videoId, {
+            $addToSet: { likes: userId },
+            $pull: { dislikes: userId }
+        })
+        res.status(200).send("Video has been liked");
+    } catch (err) {
+        next(err)
     }
 }
+
 export const dislike = async (req, res, next) => {
-    if (req.user.id === req.params.id) {
-        try {
-            const deletedUser = await User.findByIdAndDelete(req.params.id,
-                {
-                    $set: req.body
-                },
-                {
-                    new: true
-                }
-            )
-            res.status(200).send(`The user that was deleted is ${deletedUser}`)
-        } catch (err) {
-            next(err);
-        }
-    } else {
-        return next(createError(403, "Please check the added user Id. You can only delete your account!"))
+    const userId = req.user.id;
+    try {
+        await Video.findByIdAndUpdate(req.params.videoId, {
+            $addToSet: { dislikes: userId },
+            $pull: { likes: userId }
+        })
+        res.status(200).send("Video has been disliked");
+    } catch (err) {
+        next(err)
     }
 }
