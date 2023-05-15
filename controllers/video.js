@@ -3,12 +3,13 @@ import User from "../models/User.js";
 import Video from "../models/Video.js";
 
 export const createVideo = async (req, res, next) => {
-    const newVideo = await Video({ userId: req.user.id, ...req.body });
+    const newVideo = new Video({ userId: req.user.id, ...req.body });
     try {
         const savedVideo = await newVideo.save();
         res.status(200).json(savedVideo)
     } catch (err) {
         next(err);
+        console.log(err)
     }
 }
 
@@ -118,6 +119,7 @@ export const getByTags = async (req, res, next) => {
         res.status(200).send(videos)
     } catch (err) {
         next(err);
+        console.log(err)
     }
 }
 
@@ -126,7 +128,7 @@ export const getSearchedVideos = async (req, res, next) => {
     try {
         const searchedVideos = await Video.find({
             videoTitle: { $regex: query, $options: "i" }
-        }).limit(40); // Here by setting sorting condition to views: 1 are saying that bring us the most viewed videos
+        }).limit(40); // Here by setting sorting condition to views: 1 we are saying to bring us the most viewed videos
         res.status(200).send(searchedVideos);
     } catch (err) {
         next(err);
