@@ -97,7 +97,7 @@ export const like = async (req, res, next) => {
             $addToSet: { likes: userId },
             $pull: { dislikes: userId }
         })
-        res.status(200).send("Video has been liked");
+        res.status(200).send(` ${likedVideo} video has been liked`);
     } catch (err) {
         next(err)
     }
